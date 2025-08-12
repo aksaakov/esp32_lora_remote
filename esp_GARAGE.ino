@@ -24,10 +24,7 @@ int pirPin = 48;
 
 void setup() {
   Serial.begin(115200);
-  // VextON();
   delay(200);
-
-  // displayInit();
   displayLogo();
   pinMode(pirPin, INPUT);
 }
@@ -48,10 +45,10 @@ void loop() {
   delay(1000);
 }
 
-  // print text on display:
+  // ---print text on display:
   // displayShow(2000, "HEADING TEXT", "detail text");
 
-  // Send lora strings:
+  // ---Send lora strings:
   // const char* msg = "PING message";
   // if (loraSend((const uint8_t*)msg, strlen(msg), 3000)) {
   //   Serial.println("TX OK");
@@ -59,7 +56,7 @@ void loop() {
   //   Serial.println("TX FAIL");
   // }
 
-  // Receive lora strings:
+  // ---Receive lora strings:
   // uint8_t buf[128];
   // int16_t rssi; int8_t snr;
   // int n = loraReceive(buf, sizeof(buf), &rssi, &snr, 1500);

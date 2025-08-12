@@ -13,17 +13,6 @@ static SSD1306Wire display(0x3c, 500000, SDA_OLED, SCL_OLED, GEOMETRY_128_64, RS
 
 bool isDisplayOn;
 
-// void displayInit() {
-//   vextPower(true);
-//   delay(50);
-//   display.init();
-//   display.clear();
-//   display.setTextAlignment(TEXT_ALIGN_CENTER);
-//   display.setFont(ArialMT_Plain_10);
-//   display.drawString(display.getWidth()/2, display.getHeight()/2 - 5, "OLED ready");
-//   display.display();
-// }
-
 void displayClear() {
   display.clear();
 }
@@ -31,8 +20,6 @@ void displayClear() {
 void displayOff() {
   display.clear();
   display.display();
-  // If your lib has display.displayOff(), you can call it too:
-  // display.displayOff();
   vextPower(false);
   isDisplayOn = false;
 }
@@ -42,9 +29,6 @@ void displayOn() {
   delay(50);
   display.init(); 
   isDisplayOn = true;
-  // If your lib has display.displayOn(), you can call it too:
-  // display.displayOn();
-  // No need to re-init unless you fully power-cycled and lost state.
 }
 
 void displayLogo() {
