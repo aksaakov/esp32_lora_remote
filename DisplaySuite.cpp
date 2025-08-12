@@ -1,0 +1,81 @@
+#include "DisplaySuite.h"
+#include "HT_SSD1306Wire.h"
+#include "Images.h"
+
+// Heltec V3: Vext powers the OLED. LOW = ON.
+static inline void vextPower(bool on) {
+  pinMode(Vext, OUTPUT);
+  digitalWrite(Vext, on ? LOW : HIGH); // LOW turns Vext ON
+}
+
+// addr, i2c freq, SDA, SCL, geometry, RST
+static SSD1306Wire display(0x3c, 500000, SDA_OLED, SCL_OLED, GEOMETRY_128_64, RST_OLED);
+
+bool isDisplayOn;
+
+void displayInit() {
+  vextPower(true);
+  delay(50);
+  display.init();
+  display.clear();
+  display.setTextAlignment(TEXT_ALIGN_CENTER);
+  display.setFont(ArialMT_Plain_10);
+  display.drawString(display.getWidth()/2, display.getHeight()/2 - 5, "OLED ready");
+  display.display();
+}
+
+void displayShow(const String& line1, const String& line2) {
+  display.clear();
+  display.setTextAlignment(TEXT_ALIGN_CENTER);
+
+  int cx = display.getWidth() / 2;
+  int y  = 18;
+
+  display.setFont(ArialMT_Plain_16);
+  display.drawString(cx, y, line1);
+
+  if (line2.length()) {
+    display.setFont(ArialMT_Plain_10);
+    display.drawString(cx, y + 20, line2);
+  }
+  display.display();
+}
+
+void displayClear() {
+  display.clear();
+}
+
+void displayOff() {
+  display.clear();
+  display.display();
+  // If your lib has display.displayOff(), you can call it too:
+  // display.displayOff();
+  vextPower(false);
+  isDisplayOn = false;
+}
+
+void displayOn() {
+  vextPower(true);
+  delay(50);
+  isDisplayOn = true;
+  // If your lib has display.displayOn(), you can call it too:
+  // display.displayOn();
+  // No need to re-init unless you fully power-cycled and lost state.
+}
+
+void displayLogo() {
+  display.clear();
+  display.drawXbm(0, 0, logo_width, logo_height, logo_bits);
+  display.display();
+  delay(5000);
+  displayOff();
+}
+
+void displayMotion() {
+  displayOn();
+  display.clear();
+  display.drawXbm(0, 0, logo_width, logo_height, motion_bits);
+  display.display();
+  delay(1000);
+  displayOff();
+}
