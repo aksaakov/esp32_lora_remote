@@ -5,13 +5,13 @@
 void displayInit();
 
 // Show up to two lines of text (centered)
-void displayShow(const String& line1, const String& line2 = "");
+void displayShow(const int msDelay, const String& line1, const String& line2 = "");
 
 // Show your XBM logo from Logo.h
 void displayLogo();
 
 // Show your XBM motion icon from MotionIcon.h
-void displayMotion();
+void displayMotionIcon();
 
 // Optional power helpers
 void displayOff();   // clear + power Vext OFF

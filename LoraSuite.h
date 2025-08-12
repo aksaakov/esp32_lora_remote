@@ -93,11 +93,11 @@ static void _ensureInit() {
   );
 
   _loraReady = true;
-  Serial.println("Lora ready."); 
+  Serial.println("LORA RECEIVER INITIALISED"); 
 }
 
 // ---------- Public API ----------
-int loraSend(const uint8_t* data, uint16_t len, uint32_t txTimeoutMs /*=3000*/) {
+void loraSend(const uint8_t* data, uint16_t len, uint32_t txTimeoutMs /*=3000*/) {
   _ensureInit();
   _txDone = false;
   _txError = false;
@@ -119,7 +119,12 @@ int loraSend(const uint8_t* data, uint16_t len, uint32_t txTimeoutMs /*=3000*/) 
 
   // Make sure radio isn't stuck in TX state
   Radio.Sleep();
-  return (_txDone && !_txError) ? 1 : 0;
+  // --- Report status ---
+  if (_txDone && !_txError) {
+    Serial.println("LORA SEND SUCCESS");
+  } else {
+    Serial.println("LORA SEND FAILED");
+  }
 }
 
 int loraReceive(uint8_t* out, uint16_t outMax, int16_t* rssi, int8_t* snr, uint32_t rxTimeoutMs) {
@@ -127,6 +132,8 @@ int loraReceive(uint8_t* out, uint16_t outMax, int16_t* rssi, int8_t* snr, uint3
   _rxDone = false;
   _rxError = false;
   _rxSize = 0;
+
+  Serial.println("LORA RECEIVER: Listening for messages");
 
   // Start RX with timeout (0 => wait forever)
   Radio.Rx(rxTimeoutMs);
@@ -146,7 +153,7 @@ int loraReceive(uint8_t* out, uint16_t outMax, int16_t* rssi, int8_t* snr, uint3
 
   // Stop the radio to save power
   Radio.Sleep();
-
+  Serial.println("LORA SLEEP ON");
   if (!_rxDone || _rxSize == 0) return 0;
 
   // Copy out
