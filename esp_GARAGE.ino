@@ -30,10 +30,9 @@ void setup() {
 }
 
 void loop() {
-  int state = digitalRead(pirPin);  // Read sensor
+  int state = digitalRead(pirPin);  // Read motion sensor
   Serial.println(state);
   if (state == HIGH) {
-
     String message = "Motion Detected. ";
     Serial.println(message);
     displayMotionIcon();
