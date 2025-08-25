@@ -7,11 +7,12 @@ constexpr uint64_t MICROS_PER_SECOND = 1'000'000ULL;
 constexpr uint64_t MICROS_PER_MINUTE = 60ULL * MICROS_PER_SECOND;
 constexpr uint64_t MICROS_PER_HOUR   = 60ULL * MICROS_PER_MINUTE;
 
-// Policy
-constexpr uint64_t WAKE_EVERY_US   = 5ULL * MICROS_PER_HOUR;    // 5 hours
-// constexpr uint64_t AWAKE_WINDOW_US = 10ULL * MICROS_PER_MINUTE; // 10 minutes
-// constexpr uint64_t WAKE_EVERY_US   = 30ULL * MICROS_PER_SECOND;    // 30 seconds
-constexpr uint64_t AWAKE_WINDOW_US = 30ULL * MICROS_PER_SECOND; // 30 seconds
+// Policy [default]
+constexpr uint64_t SLEEP_TIME   = 8ULL * MICROS_PER_HOUR;    // 8 hours
+// constexpr uint64_t AWAKE_TIME = 10ULL * MICROS_PER_MINUTE; // 10 minutes
+// Policy [short]
+// constexpr uint64_t SLEEP_TIME   = 30ULL * MICROS_PER_SECOND;    // 30 seconds
+constexpr uint64_t AWAKE_TIME = 60ULL * MICROS_PER_SECOND; // 60 seconds
 
 
 //Track awake window start
@@ -19,7 +20,7 @@ static uint64_t g_awake_start_us = 0;
 
 static void armWakeSources() {
   // Timer wake
-  esp_sleep_enable_timer_wakeup(WAKE_EVERY_US);
+  esp_sleep_enable_timer_wakeup(SLEEP_TIME);
 
   // Try to enable wake on the PIR GPIO if it's RTC-capable
   gpio_num_t wakeGpio = (gpio_num_t)PIR_PIN;

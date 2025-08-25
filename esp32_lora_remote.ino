@@ -8,22 +8,53 @@
 
 bool isAlarmArmed = false; 
 bool isAlarmOn = false;
-bool isMotionTriggered = false;
+bool isWokeByMotion = false;
 
 int VOLTAGE_PIN = 2;
-int PIR_PIN = 5;
-int ALARM_LED_PIN = 45;
+int PIR_PIN = 5;                                                               
+int ALARM_RELAY = 45;
 
 uint8_t motion_pkg = 0x01;
-const uint8_t akarm_status_req_pkg = 0x90;
+const uint8_t alarm_status_req_pkg = 0x90;
 volatile uint8_t queuedAck = 0;
+constexpr uint8_t STATUS_OPT_MOTION = 0x01; 
+constexpr uint8_t STATUS_OPT_NONE = 0x00; 
 constexpr uint64_t MOTION_SUPPRESS_TIME = 5ULL * 1000000ULL; // 5s
+constexpr uint8_t BATTERY_REPORT_CODE = 0x80;
 
-void sendMessage(const uint8_t* package) {
+void sendMessage(const uint8_t* package, size_t len = 1) {
   Radio.Standby();
-  Serial.printf(">>> Sending package: 0x%02X <<<\n",  package[0]);
-  Radio.Send( (uint8_t *)package, 1);
+  Serial.printf("Sending package:");
+  for (size_t i = 0; i < len; i++) {
+    Serial.printf(" 0x%02X", package[i]);
+  }
+  Serial.println();
+  Radio.Send((uint8_t*)package, len);
   Radio.IrqProcess();
+}
+
+inline void sendStatusRequest(uint8_t optionalMotion) {
+  uint8_t pkt[2] = { alarm_status_req_pkg, optionalMotion };
+  sendMessage(pkt, 2);
+}
+
+void toggleAlarmSound(bool alarmOn) {
+  if (alarmOn) {
+    isAlarmOn = true;
+    digitalWrite(ALARM_RELAY, HIGH);
+    Serial.println("!!! ALARM LOUD !!!");
+  } else {
+    isAlarmOn = false;
+    digitalWrite(ALARM_RELAY, LOW);
+    Serial.println("!!! ALARM OFF !!!");
+  }
+}
+
+void sendBatteryUpdate() {
+  float v = readBatteryVoltage();
+  uint8_t pct = (uint8_t)batteryPercent(v);
+  uint8_t battery_pkg[2] = { BATTERY_REPORT_CODE, pct };
+  sendMessage(battery_pkg, 2);
 }
 
 void setup() {
@@ -33,25 +64,35 @@ void setup() {
 
   // displayLogo();
   pinMode(PIR_PIN, INPUT_PULLDOWN);
-  pinMode(ALARM_LED_PIN, OUTPUT);
+  pinMode(ALARM_RELAY, OUTPUT);
   radioInit();
 
   // Wake cause:
   auto cause = esp_sleep_get_wakeup_cause();
-  Serial.print("Wake cause: ");
   switch (cause) {
-    case ESP_SLEEP_WAKEUP_TIMER: 
-      Serial.println("TIMER"); 
+    case ESP_SLEEP_WAKEUP_TIMER: {
+      Serial.println("Wake cause: TIMER"); 
+      // sendMessage(&alarm_status_req_pkg);
+      sendStatusRequest(STATUS_OPT_NONE);
+      delay(500);
+      sendBatteryUpdate();
       break;
-    case ESP_SLEEP_WAKEUP_EXT0:  
-      sendMessage(&akarm_status_req_pkg);
-      sendMessage(&motion_pkg);
-      Serial.println("MOTION (EXT0)"); 
+    }
+      case ESP_SLEEP_WAKEUP_EXT0: {
+      Serial.println("wake cause: MOTION (EXT0)");   
+      // isMotionTriggered = true;
+      isWokeByMotion = true;
+      // sendMessage(&alarm_status_req_pkg);
+      sendStatusRequest(STATUS_OPT_MOTION);
+      displayMotionIcon();
       break;
-    // case ESP_SLEEP_WAKEUP_EXT1:  Serial.println("MOTION (EXT1)"); break;
+    }
     default:   
-      sendMessage(&akarm_status_req_pkg);
-      Serial.println("POWER-ON/OTHER"); 
+      Serial.println("Wake cause: POWER-ON/OTHER"); 
+      // sendMessage(&alarm_status_req_pkg);
+      sendStatusRequest(STATUS_OPT_NONE);
+      delay(500);
+      sendBatteryUpdate();
       break;
   }
   
@@ -69,19 +110,18 @@ void processReceivedPacket(const uint8_t* data, uint16_t len, int16_t rssi, int8
     case 0x10:
       Serial.println("received -> 0x10 code: ALARM ARMED");
       queuedAck = 0x10;
-      digitalWrite(ALARM_LED_PIN, HIGH);
       isAlarmArmed = true;
-      if (isMotionTriggered) {
-        isAlarmOn = true;
+      if (isWokeByMotion) {
+        toggleAlarmSound(true);
       }
       break;
     case 0x11:
       Serial.println("received -> 0x11 code: ALARM DIDSARMED");
       queuedAck = 0x11;
-      digitalWrite(ALARM_LED_PIN, LOW);
+      digitalWrite(ALARM_RELAY, LOW);
       isAlarmArmed = false;
-      isAlarmOn = false;
-      isMotionTriggered = false;
+      isWokeByMotion = false;
+      toggleAlarmSound(false);
       break;      
     default:
       Serial.println("received -> UNKNOWN code or data not binary.");
@@ -90,15 +130,6 @@ void processReceivedPacket(const uint8_t* data, uint16_t len, int16_t rssi, int8
 }
 
 void loop() {
-  float voltage = readBatteryVoltage();
-  int percent = batteryPercent(voltage);
-
-  // Serial.print("Battery Voltage: ");
-  // Serial.print(voltage, 2);
-  // Serial.print(" V  |  Battery: ");
-  // Serial.print(percent);
-  // Serial.println("%");
-
   int motionState = digitalRead(PIR_PIN);
 
   if (queuedAck) {
@@ -112,18 +143,24 @@ void loop() {
   if (!shouldPeventMotion && motionState == HIGH) {
     displayMotionIcon();
     sendMessage(&motion_pkg);
-    isMotionTriggered = true;
-  }
-
-  if (isAlarmOn) {
-    Serial.println("!!! ALARM LOUD !!!");
+    // isMotionTriggered = true;
+    if (isAlarmArmed) toggleAlarmSound(true);
   }
 
   Radio.IrqProcess();
 
-  if (!isAlarmOn && esp_timer_get_time() - g_awake_start_us >= AWAKE_WINDOW_US) {
+  if (!isAlarmOn && esp_timer_get_time() - g_awake_start_us >= AWAKE_TIME) {
     goDeepSleep();
   }
 
   if (!queuedAck) delay(1000);
 }
+
+  // float voltage = readBatteryVoltage();
+  // int percent = batteryPercent(voltage);
+
+  // Serial.print("Battery Voltage: ");
+  // Serial.print(voltage, 2);
+  // Serial.print(" V  |  Battery: ");
+  // Serial.print(percent);
+  // Serial.println("%");
