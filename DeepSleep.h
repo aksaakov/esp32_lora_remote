@@ -8,11 +8,11 @@ constexpr uint64_t MICROS_PER_MINUTE = 60ULL * MICROS_PER_SECOND;
 constexpr uint64_t MICROS_PER_HOUR   = 60ULL * MICROS_PER_MINUTE;
 
 // Policy [default]
-constexpr uint64_t SLEEP_TIME   = 8ULL * MICROS_PER_HOUR;    // 8 hours
-// constexpr uint64_t AWAKE_TIME = 10ULL * MICROS_PER_MINUTE; // 10 minutes
-// Policy [short]
-// constexpr uint64_t SLEEP_TIME   = 30ULL * MICROS_PER_SECOND;    // 30 seconds
-constexpr uint64_t AWAKE_TIME = 60ULL * MICROS_PER_SECOND; // 60 seconds
+constexpr uint64_t SLEEP_TIME   = 8ULL * MICROS_PER_HOUR;    // 5 hours
+constexpr uint64_t AWAKE_TIME = 1ULL * MICROS_PER_MINUTE; // 1 minute
+// Policy [debug]
+// constexpr uint64_t SLEEP_TIME   = 15ULL * MICROS_PER_SECOND;    // 15 seconds
+// constexpr uint64_t AWAKE_TIME = 15ULL * MICROS_PER_SECOND; // 15 seconds
 
 
 //Track awake window start
