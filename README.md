@@ -18,6 +18,7 @@ The remote is responsible for detecting motion, reporting battery status, and ac
 - Board: Heltec ESP32 LoRa v3.
 - PIR sensor (digital out).
 - 12v -> 5v buck converter.
+- DC0-25V Voltage Detection Module for battery life monitoring.
 - Relay module for siren/alarm (5 V relay, powered from ESP BAT pin).
 - Li-ion battery (via onboard JST).
 
