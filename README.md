@@ -1,26 +1,26 @@
-**ESP32 LoRa Remote**
+## ESP32 LoRa Remote
 
 The goal is to establish communication between a host esp32 (in house) and a remote (off grid) esp32.
 This project is the remote device in a two-way LoRa communication system using Heltec ESP32 v3 boards.
 It connects a PIR motion sensor and a relay-driven siren/alarm, then communicates with the host (running on a Raspberry Pi) over LoRa.
 The remote is responsible for detecting motion, reporting battery status, and activating/deactivating the alarm based on commands received from the host.
 
-**Features**
+## Features
 
-PIR motion detection → sends 0x01 packet to host.
-Alarm control → siren relay toggled based on 0x11 (deactivate) or host commands.
-Battery monitoring → periodically sends 0x80 packets with remaining percentage.
-Low-power support → deep sleep when idle, wakes on PIR or timer.
-Two-way LoRa → reliable acknowledgment system with retry.
+- PIR motion detection → sends 0x01 packet to host.
+- Alarm control → siren relay toggled based on 0x11 (deactivate) or host commands.
+- Battery monitoring → periodically sends 0x80 packets with remaining percentage.
+- Low-power support → deep sleep when idle, wakes on PIR or timer.
+- Two-way LoRa → reliable acknowledgment system with retry.
 
-**Hardware Requirements**
+## Hardware Requirements
 
-Board: Heltec ESP32 LoRa v3.
-PIR sensor (digital out).
-Relay module for siren/alarm (5 V relay, powered from ESP BAT pin + buck if needed).
-Li-ion battery (via onboard JST).
+- Board: Heltec ESP32 LoRa v3.
+- PIR sensor (digital out).
+-  Relay module for siren/alarm (5 V relay, powered from ESP BAT pin + buck if needed).
+-  Li-ion battery (via onboard JST).
 
-Pin Mapping
+**Pin Mapping**
 | Function      | ESP32 Pin | Notes                   |
 |---------------|-----------|-------------------------|
 | PIR input     | GPIO5     | Wakes device on motion. |
